@@ -1,0 +1,38 @@
+name: Production go gate
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  production-go:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      STAGING_POSTGRES_URL: ${{ secrets.STAGING_POSTGRES_URL }}
+      QUEUEFLOW_POSTGRES_URL: ${{ secrets.PRODUCTION_POSTGRES_URL }}
+      QUEUEFLOW_PG_SSL: require
+      QUEUEFLOW_PG_SCHEMA: queueflow_staging
+      PRODUCTION_URL: https://quvery-systerm.vercel.app
+      PRODUCTION_SMOKE_STORE_ID: LOOK-XUNT
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Verify required secrets
+        run: |
+          test -n "$STAGING_POSTGRES_URL"
+          test -n "$QUEUEFLOW_POSTGRES_URL"
+      - name: Production go
+        run: npm run production-go
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: production-go-artifacts
+          path: |
+            artifacts/artillery-postgres-report.json

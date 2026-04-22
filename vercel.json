@@ -1,0 +1,30 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "/api"
+    },
+    {
+      "source": "/merchant",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/merchant/:path*",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/customer",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/customer/:path*",
+      "destination": "/index.html"
+    }
+  ],
+  "functions": {
+    "api/index.mjs": {
+      "includeFiles": "node_modules/sql.js/dist/sql-wasm.wasm"
+    }
+  }
+}

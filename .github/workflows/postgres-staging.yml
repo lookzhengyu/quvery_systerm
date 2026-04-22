@@ -1,0 +1,84 @@
+name: Postgres staging integration
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_k6:
+        description: Run k6 hotspot load test after integration checks
+        required: false
+        default: "false"
+      run_artillery:
+        description: Run Artillery hotspot load test after integration checks
+        required: false
+        default: "false"
+  schedule:
+    - cron: "0 18 * * *"
+
+jobs:
+  integration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      STAGING_POSTGRES_URL: ${{ secrets.STAGING_POSTGRES_URL }}
+      QUEUEFLOW_PG_SSL: require
+      QUEUEFLOW_PG_SCHEMA: queueflow_staging
+      QUEUEFLOW_STAGING_JOIN_CONCURRENCY: "15"
+      QUEUEFLOW_STAGING_WALKIN_CONCURRENCY: "30"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run build
+      - run: npm run test:postgres:staging
+
+  k6-hotspot:
+    if: github.event_name == 'workflow_dispatch' && inputs.run_k6 == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      STAGING_POSTGRES_URL: ${{ secrets.STAGING_POSTGRES_URL }}
+      QUEUEFLOW_PG_SSL: require
+      QUEUEFLOW_PG_SCHEMA: queueflow_staging
+      K6_DURATION: 45s
+      K6_WALKIN_RATE: "8"
+      K6_CALL_RATE: "4"
+      K6_PREALLOCATED_VUS: "30"
+      K6_MAX_VUS: "80"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: grafana/setup-k6-action@v1
+      - run: npm ci
+      - run: npm run load:k6:postgres
+      - uses: actions/upload-artifact@v4
+        with:
+          name: k6-postgres-summary
+          path: artifacts/k6-postgres-summary.json
+
+  artillery-hotspot:
+    if: github.event_name == 'workflow_dispatch' && inputs.run_artillery == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      STAGING_POSTGRES_URL: ${{ secrets.STAGING_POSTGRES_URL }}
+      QUEUEFLOW_PG_SSL: require
+      QUEUEFLOW_PG_SCHEMA: queueflow_staging
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run load:artillery:postgres
+      - uses: actions/upload-artifact@v4
+        with:
+          name: artillery-postgres-report
+          path: artifacts/artillery-postgres-report.json

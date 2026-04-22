@@ -1,0 +1,48 @@
+/* QueueFlow – Application-specific utility styles */
+
+/* Smooth modal backdrop overlay */
+.qf-modal-backdrop {
+  animation: fadeIn 0.2s ease-out;
+}
+
+/* Confirm dialog panel entrance */
+.qf-dialog-panel {
+  animation: bounceIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Countdown progress bar track */
+.qf-countdown-track {
+  height: 4px;
+  border-radius: 9999px;
+  background-color: rgba(51, 65, 85, 0.5);
+  overflow: hidden;
+}
+
+.qf-countdown-bar {
+  height: 100%;
+  border-radius: 9999px;
+  transition: width 1s linear, background-color 0.5s;
+}
+
+/* Notification bell shake on trigger */
+@keyframes bellRing {
+  0% { transform: rotate(0); }
+  15% { transform: rotate(14deg); }
+  30% { transform: rotate(-14deg); }
+  45% { transform: rotate(8deg); }
+  60% { transform: rotate(-8deg); }
+  75% { transform: rotate(3deg); }
+  100% { transform: rotate(0); }
+}
+
+.qf-bell-ring {
+  animation: bellRing 0.8s ease-in-out;
+}
+
+/* Seated section toggle chevron */
+.qf-chevron-rotate {
+  transition: transform 0.2s ease;
+}
+.qf-chevron-rotate.open {
+  transform: rotate(180deg);
+}
