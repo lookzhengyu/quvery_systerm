@@ -201,7 +201,19 @@ async function configureTable(baseUrl, storeId, merchantToken) {
 }
 
 function runArtillery(baseUrl, storeId, merchantToken) {
+  const useBundledWindowsNpx = process.platform === 'win32';
   const npxCliPath = join(dirname(process.execPath), 'node_modules', 'npm', 'bin', 'npx-cli.js');
+  const command = useBundledWindowsNpx ? process.execPath : 'npx';
+  const commandArgs = [
+    ...(useBundledWindowsNpx ? [npxCliPath] : []),
+    'artillery',
+    'run',
+    '--target',
+    baseUrl,
+    '--output',
+    artilleryReportPath,
+    artilleryScriptPath,
+  ];
   const allowedEnvKeys = [
     'ALLUSERSPROFILE',
     'APPDATA',
@@ -230,28 +242,15 @@ function runArtillery(baseUrl, storeId, merchantToken) {
       .map(key => [key, process.env[key]])
   );
   return new Promise((resolveRun, rejectRun) => {
-    const child = spawn(
-      process.execPath,
-      [
-        npxCliPath,
-        'artillery',
-        'run',
-        '--target',
-        baseUrl,
-        '--output',
-        artilleryReportPath,
-        artilleryScriptPath,
-      ],
-      {
-        cwd: projectRoot,
-        env: {
-          ...childEnv,
-          QUEUEFLOW_LOAD_STORE_ID: storeId,
-          QUEUEFLOW_LOAD_MERCHANT_TOKEN: merchantToken,
-        },
-        stdio: 'inherit',
-      }
-    );
+    const child = spawn(command, commandArgs, {
+      cwd: projectRoot,
+      env: {
+        ...childEnv,
+        QUEUEFLOW_LOAD_STORE_ID: storeId,
+        QUEUEFLOW_LOAD_MERCHANT_TOKEN: merchantToken,
+      },
+      stdio: 'inherit',
+    });
 
     child.on('error', error => {
       rejectRun(new Error(`Unable to start Artillery through npx. ${error.message}`));
