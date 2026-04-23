@@ -1,0 +1,43 @@
+config:
+  phases:
+    - name: ci warm hotspot
+      duration: 10
+      arrivalRate: 1
+    - name: ci cross-region hotspot smoke
+      duration: 20
+      arrivalRate: 1
+  http:
+    timeout: 60
+  processor: "./queue-hotspot-artillery-processor.cjs"
+scenarios:
+  - name: hot store walk-ins
+    weight: 7
+    beforeScenario: "loadEnvVars"
+    flow:
+      - post:
+          url: "/stores/{{ storeId }}/customers/walk-in"
+          headers:
+            Authorization: "Bearer {{ merchantToken }}"
+          json:
+            partySize: 2
+            name: "Artillery CI walk-in"
+  - name: single table lock conflicts
+    weight: 3
+    beforeScenario: "loadEnvVars"
+    flow:
+      - post:
+          url: "/stores/{{ storeId }}/customers/walk-in"
+          headers:
+            Authorization: "Bearer {{ merchantToken }}"
+          json:
+            partySize: 2
+            name: "Artillery CI lock"
+          capture:
+            - json: "$.customer.id"
+              as: "customerId"
+      - post:
+          url: "/stores/{{ storeId }}/customers/{{ customerId }}/call"
+          headers:
+            Authorization: "Bearer {{ merchantToken }}"
+          json:
+            tableId: "table-a"

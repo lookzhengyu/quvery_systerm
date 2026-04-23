@@ -85,6 +85,7 @@ jobs:
       QUEUEFLOW_PG_LOCK_TIMEOUT_MS: "45000"
       QUEUEFLOW_PG_STATEMENT_TIMEOUT_MS: "60000"
       QUEUEFLOW_PG_TRANSACTION_RETRIES: "4"
+      QUEUEFLOW_ARTILLERY_SCRIPT: load/queue-hotspot-ci.artillery.yml
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

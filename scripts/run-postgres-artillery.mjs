@@ -24,7 +24,10 @@ await loadProjectEnv(['.env.staging.local']);
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const projectRoot = join(__dirname, '..');
 const serverScriptPath = join(projectRoot, 'server', 'mock-queue-server.mjs');
-const artilleryScriptPath = join(projectRoot, 'load', 'queue-hotspot.artillery.yml');
+const artilleryScriptPath = join(
+  projectRoot,
+  process.env.QUEUEFLOW_ARTILLERY_SCRIPT ?? join('load', 'queue-hotspot.artillery.yml')
+);
 const artifactsDir = join(projectRoot, 'artifacts');
 const artilleryReportPath = join(artifactsDir, 'artillery-postgres-report.json');
 const postgresUrl = normalizeConnectionString(
