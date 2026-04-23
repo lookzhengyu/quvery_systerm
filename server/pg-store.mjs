@@ -27,17 +27,17 @@ const sslMode = (process.env.QUEUEFLOW_PG_SSL ?? '').trim().toLowerCase();
 const poolMax = Number.parseInt(process.env.QUEUEFLOW_PG_POOL_MAX ?? '5', 10);
 const poolIdleTimeoutMs = Number.parseInt(process.env.QUEUEFLOW_PG_IDLE_TIMEOUT_MS ?? '10000', 10);
 const poolConnectionTimeoutMs = Number.parseInt(
-  process.env.QUEUEFLOW_PG_CONNECTION_TIMEOUT_MS ?? '5000',
+  process.env.QUEUEFLOW_PG_CONNECTION_TIMEOUT_MS ?? '15000',
   10
 );
-const pgLockTimeoutMs = parsePositiveInteger(process.env.QUEUEFLOW_PG_LOCK_TIMEOUT_MS, 5000);
+const pgLockTimeoutMs = parsePositiveInteger(process.env.QUEUEFLOW_PG_LOCK_TIMEOUT_MS, 15000);
 const pgStatementTimeoutMs = parsePositiveInteger(
   process.env.QUEUEFLOW_PG_STATEMENT_TIMEOUT_MS,
-  15000
+  30000
 );
 const pgTransactionRetryCount = parsePositiveInteger(
   process.env.QUEUEFLOW_PG_TRANSACTION_RETRIES,
-  2
+  4
 );
 
 const storageEngine = 'node-postgres';
@@ -72,7 +72,14 @@ async function setLocalSchemaSearchPath(client) {
 }
 
 function isRetryableTransactionError(error) {
-  return error?.code === '40001' || error?.code === '40P01' || error?.code === '55P03';
+  if (error?.code === '40001' || error?.code === '40P01' || error?.code === '55P03') {
+    return true;
+  }
+
+  return (
+    error?.code === '57014' &&
+    /lock timeout|statement timeout|canceling statement/i.test(String(error?.message ?? ''))
+  );
 }
 
 function wait(ms) {
@@ -237,7 +244,7 @@ function buildPoolConfig() {
     connectionTimeoutMillis:
       Number.isFinite(poolConnectionTimeoutMs) && poolConnectionTimeoutMs > 0
         ? poolConnectionTimeoutMs
-        : 5000,
+        : 15000,
   };
 
   if (sslMode === 'true' || sslMode === 'require') {
