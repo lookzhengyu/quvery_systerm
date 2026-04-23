@@ -120,6 +120,17 @@ async function main() {
     assert.equal(Array.isArray(state.payload?.tables), true);
   });
   await runStep('Vercel production error log scan', async () => {
+    if (process.env.CI === 'true' && !process.env.VERCEL_TOKEN) {
+      console.log(
+        JSON.stringify({
+          ok: true,
+          skipped: true,
+          reason: 'VERCEL_TOKEN is not configured in CI.',
+        })
+      );
+      return;
+    }
+
     const logs = await runCommand(
       'npx',
       [

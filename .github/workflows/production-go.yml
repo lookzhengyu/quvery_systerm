@@ -21,6 +21,7 @@ jobs:
       QUEUEFLOW_PG_STATEMENT_TIMEOUT_MS: "60000"
       QUEUEFLOW_PG_TRANSACTION_RETRIES: "4"
       QUEUEFLOW_ARTILLERY_SCRIPT: load/queue-hotspot-ci.artillery.yml
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
       PRODUCTION_URL: https://quvery-systerm.vercel.app
       PRODUCTION_SMOKE_STORE_ID: LOOK-XUNT
     steps:
